@@ -34,38 +34,51 @@ trait HandlesRedirectWithToast
         return redirect()->back();
     }
 
-    public function getTrialLink($text)
+    public function getTrialLink($text, $allowDismiss = true)
     {
         $trialLink = route('subscription.manage', ['scrollToSection' => 'subscriptionOptions']);
-        return "<Link href='{$trialLink}' @click='toast.setShow(false)' class='underline text-blue-600 hover:text-blue-800'>{$text}</Link>";
+        $dismissAction = $allowDismiss ? "@click='toast.setShow(false)'" : "";
+        return "<Link href='{$trialLink}' {$dismissAction} class='underline text-blue-600 hover:text-blue-800'>{$text}</Link>";
     }
 
-    public function createSpladeLink($url, $text)
+    public function createSpladeLink($url, $text, $allowDismiss = true)
     {
-        return " <Link @click='toast.setShow(false)' href='{$url}' class='underline text-blue-600 hover:text-blue-800'>{$text}</Link>";
+        $dismissAction = $allowDismiss ? "@click='toast.setShow(false)'" : "";
+        return " <Link {$dismissAction} href='{$url}' class='underline text-blue-600 hover:text-blue-800'>{$text}</Link>";
     }
 
+    public function createLink($routeName, $text, $scrollToSection = null, $allowDismiss = true)
+    {
+        if ($scrollToSection) {
+            $url = route($routeName, ['scrollToSection' => $scrollToSection]);
+        } else {
+            $url = route($routeName);
+        }
 
-    public function prepareSubscriptionMessage(User $user, $featureName = 'this feature')
+        $dismissAction = $allowDismiss ? "@click='toast.setShow(false)'" : "";
+        return "<Link href='{$url}' {$dismissAction} class='underline text-blue-600 hover:text-blue-800'>{$text}</Link>";
+    }
+
+    public function prepareSubscriptionMessage(User $user, $featureName = 'this feature', $allowDismiss = true)
     {
         // User has already used their trial
         if ($user->hasUsedTrial()) {
-            $upgradeLink = $this->getTrialLink('upgrade now');
+            $upgradeLink = $this->getTrialLink('upgrade now', $allowDismiss);
             return "To access {$featureName}, please {$upgradeLink}. Your trial period has ended.";
         }
 
         // User hasn't tried the trial yet
-        $trialLink = $this->getTrialLink('start your free trial');
+        $trialLink = $this->getTrialLink('start your free trial', $allowDismiss);
         return "Try {$featureName} and all premium features with your {$trialLink}!";
     }
 
-    public function showSubscriptionRequiredToastAndRedirect(User $user, $featureName = 'this feature')
+    public function showSubscriptionRequiredToastAndRedirect(User $user, $featureName = 'this feature', $allowDismiss = true)
     {
 //        if ($user->getEffectivePlan() !== 'free') {
 //            return null;
 //        }
 
-        $message = $this->prepareSubscriptionMessage($user, $featureName);
+        $message = $this->prepareSubscriptionMessage($user, $featureName, $allowDismiss);
 
         return $this->showToastAndRedirectBack(
             'Subscription Required',
@@ -73,7 +86,6 @@ trait HandlesRedirectWithToast
             'warning'
         );
     }
-
 
     public function showToast($title, $message, $type, $autoDismiss = 3, $backdrop = false)
     {
