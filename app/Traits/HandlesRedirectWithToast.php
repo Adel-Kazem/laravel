@@ -120,4 +120,31 @@ trait HandlesRedirectWithToast
         // Redirect to the modified URL
         return redirect($httpUrl);
     }
+
+    public function showToastAndRedirectToRoute($routeName, $routeParams = [], $title = null, $message = null, $type = 'success', $autoDismiss = 10)
+    {
+        if ($type === 'Error' || $type === 'error') {
+            $type = 'danger';
+        }
+
+        $toast = Toast::rightTop();
+
+        if (!empty($title)) {
+            $toast->title($title);
+        }
+
+        if (!empty($message)) {
+            $toast->message($message);
+        }
+
+        if (!empty($type)) {
+            $toast->{$type}();
+        }
+
+        if (!empty($autoDismiss)) {
+            $toast->autoDismiss($autoDismiss);
+        }
+
+        return redirect()->route($routeName, $routeParams);
+    }
 }
